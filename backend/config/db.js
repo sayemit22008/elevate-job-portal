@@ -8,10 +8,13 @@ const pool = mysql.createPool({
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'job_portal',
+    database: process.env.DB_NAME || 'defaultdb',
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    ssl: process.env.DB_HOST && process.env.DB_HOST.includes('aivencloud.com') 
+        ? { rejectUnauthorized: false } 
+        : false
 });
 
 // Provide a promise-based API
@@ -20,15 +23,11 @@ const promisePool = pool.promise();
 // Check connection
 promisePool.getConnection()
     .then(connection => {
-        console.log('Connected to MySQL database');
+        console.log('Connected to MySQL database on Aiven');
         connection.release();
     })
     .catch(err => {
-        if (err.code === 'ER_BAD_DB_ERROR') {
-            console.error(`Database '${process.env.DB_NAME || 'job_portal'}' does not exist. Please run setup.sql.`);
-        } else {
-            console.error('Database connection failed:', err.message);
-        }
+        console.error('Database connection failed:', err.message);
     });
 
 module.exports = promisePool;

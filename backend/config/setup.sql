@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS elevate_job_portal;
-USE elevate_job_portal;
+-- Database setup for MySQL (Aiven)
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -12,12 +11,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS profiles (
     user_id INT PRIMARY KEY,
-    skills TEXT, -- comma-separated or json
+    skills TEXT,
     education TEXT,
     experience TEXT,
     resume_url VARCHAR(255),
-    company_name VARCHAR(100), -- For HR
-    company_logo VARCHAR(255), -- For HR
+    company_name VARCHAR(100),
+    company_logo VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
