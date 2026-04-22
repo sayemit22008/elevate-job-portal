@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Dashboard - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <a href="hr-dashboard.html" class="active">Overview</a>
+                <a href="manage-jobs.html">Manage Jobs</a>
+                <a href="post-job.html">Post a Job</a>
+            </aside>
+            
+            <div class="dashboard-content fade-in">
+                <h2 style="margin-bottom: 1.5rem;">HR Dashboard</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-number" id="jobs-count">0</div>
+                        <div>Total Jobs Posted</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                        <div class="stat-number" id="applicants-count">0</div>
+                        <div>Total Applicants</div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 1rem;">Company Profile</h3>
+                    <form id="company-form">
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" id="company_name" class="form-control" placeholder="Acme Corp">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Company</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = getUser();
+            if (!user || user.role !== 'hr') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const stats = await apiFetch('/users/dashboard-stats');
+                document.getElementById('jobs-count').innerText = stats.jobsCount;
+                document.getElementById('applicants-count').innerText = stats.applicantsCount;
+
+                const profile = await apiFetch('/users/profile');
+                if (profile) {
+                    document.getElementById('company_name').value = profile.company_name || '';
+                }
+            } catch (err) {}
+
+            document.getElementById('company-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const company_name = document.getElementById('company_name').value;
+                try {
+                    await apiFetch('/users/profile', {
+                        method: 'PUT',
+                        body: JSON.stringify({ company_name })
+                    });
+                    showToast('Company profile updated');
+                } catch (err) {}
+            });
+        });
+    </script>
+</body>
+</html>

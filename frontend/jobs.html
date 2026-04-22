@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Jobs - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            align-items: center;
+        }
+        .search-bar input, .search-bar select {
+            flex: 1;
+            border: none;
+            background: #f9fafb;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+        .search-bar input:focus, .search-bar select:focus {
+            outline: 2px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="jobs.html" style="color: var(--primary);">Find a Job</a></li>
+            </ul>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="fade-in">
+            <h2 style="margin-bottom: 1.5rem;">Browse Open Opportunities</h2>
+            
+            <form id="search-form" class="search-bar">
+                <input type="text" id="keyword" placeholder="Job title or keyword...">
+                <input type="text" id="location" placeholder="Location...">
+                <select id="category">
+                    <option value="">All Categories</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Design">Design</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Finance">Finance</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+
+            <div class="job-grid" id="jobs-container">
+                <div style="grid-column: 1 / -1; text-align: center;">Loading...</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        async function loadJobs(queryParams = '') {
+            const container = document.getElementById('jobs-container');
+            container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center;">Loading...</div>';
+            
+            try {
+                const jobs = await apiFetch(`/jobs${queryParams}`);
+                container.innerHTML = '';
+                
+                if (jobs.length === 0) {
+                    container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--gray);">No jobs found matching your criteria.</p>';
+                    return;
+                }
+
+                jobs.forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'job-card';
+                    card.innerHTML = `
+                        <h3 class="job-title">${job.title}</h3>
+                        <p class="job-company">${job.company_name}</p>
+                        <div class="job-tags">
+                            <span class="tag">📍 ${job.location || 'Remote'}</span>
+                            <span class="tag">💼 ${job.category || 'General'}</span>
+                        </div>
+                        <a href="job-details.html?id=${job.id}" class="btn btn-primary" style="margin-top: auto; text-align: center;">View Details</a>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                container.innerHTML = '<p style="color: red; grid-column: 1 / -1; text-align: center;">Error loading jobs.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadJobs();
+            
+            document.getElementById('search-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const keyword = document.getElementById('keyword').value;
+                const location = document.getElementById('location').value;
+                const category = document.getElementById('category').value;
+                
+                const params = new URLSearchParams();
+                if (keyword) params.append('search', keyword);
+                if (location) params.append('location', location);
+                if (category) params.append('category', category);
+                
+                const queryString = params.toString() ? `?${params.toString()}` : '';
+                loadJobs(queryString);
+            });
+        });
+    </script>
+</body>
+</html>

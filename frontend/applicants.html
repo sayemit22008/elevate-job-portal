@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicants - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .applicant-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+        .applicant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .applicant-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <a href="hr-dashboard.html">Overview</a>
+                <a href="manage-jobs.html" class="active">Manage Jobs</a>
+                <a href="post-job.html">Post a Job</a>
+            </aside>
+            
+            <div class="dashboard-content fade-in">
+                <h2 style="margin-bottom: 1.5rem;">Review Applicants</h2>
+                <div id="applicants-list">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('jobId');
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = getUser();
+            if (!user || user.role !== 'hr') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!jobId) {
+                document.getElementById('applicants-list').innerHTML = '<p>No job selected.</p>';
+                return;
+            }
+
+            try {
+                const applicants = await apiFetch(`/applications/job/${jobId}`);
+                const container = document.getElementById('applicants-list');
+                container.innerHTML = '';
+
+                if (applicants.length === 0) {
+                    container.innerHTML = '<p>No applications received yet.</p>';
+                    return;
+                }
+
+                applicants.forEach(app => {
+                    const card = document.createElement('div');
+                    card.className = 'applicant-card';
+                    card.innerHTML = `
+                        <div class="applicant-header">
+                            <div>
+                                <h3 style="color: var(--primary);">${app.name}</h3>
+                                <small style="color: var(--gray);">${app.email} • Applied: ${new Date(app.applied_at).toLocaleDateString()}</small>
+                            </div>
+                            <div>
+                                <strong style="margin-right: 10px;">Status: ${app.status}</strong>
+                                ${app.status === 'Pending' ? `
+                                    <button class="btn btn-outline" style="border-color: #10B981; color: #10B981; padding: 0.3rem 0.6rem;" onclick="updateStatus(${app.application_id}, 'Accepted')">Accept</button>
+                                    <button class="btn btn-outline" style="border-color: #ef4444; color: #ef4444; padding: 0.3rem 0.6rem;" onclick="updateStatus(${app.application_id}, 'Rejected')">Reject</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="applicant-details">
+                            <div>
+                                <strong>Skills:</strong>
+                                <p>${app.skills || 'Not provided'}</p>
+                            </div>
+                            <div>
+                                <strong>Experience:</strong>
+                                <p>${app.experience || 'Not provided'}</p>
+                            </div>
+                        </div>
+                        ${app.resume_url ? `<a href="http://localhost:5000${app.resume_url}" target="_blank" class="btn btn-primary" style="padding: 0.4rem 1rem;">View Resume PDF/Doc</a>` : '<p style="color:red; font-size:0.9rem;">No resume attached</p>'}
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {}
+        });
+
+        async function updateStatus(id, status) {
+            try {
+                await apiFetch(`/applications/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ status })
+                });
+                showToast(`Application marked as ${status}`);
+                setTimeout(() => window.location.reload(), 1000);
+            } catch (err) {}
+        }
+    </script>
+</body>
+</html>

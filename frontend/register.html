@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .role-wrapper {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .role-option {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        .role-option:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        .role-option.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <div class="auth-nav">
+                <a href="login.html" class="btn btn-outline">Log In Instead</a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="glass-card auth-container fade-in" style="max-width: 500px;">
+            <h2 style="text-align: center; margin-bottom: 0.5rem;">Join Elevate</h2>
+            <p style="text-align: center; color: var(--gray); margin-bottom: 2rem;">Create your account to continue</p>
+            
+            <form id="register-form">
+                <div class="form-group">
+                    <label>I want to:</label>
+                    <div class="role-wrapper" id="role-selector">
+                        <div class="role-option selected" data-role="seeker">Find a Job</div>
+                        <div class="role-option" data-role="hr">Hire Talent</div>
+                    </div>
+                    <input type="hidden" id="role" value="seeker">
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="name" class="form-control" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="email" class="form-control" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create Account</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Role Selector logic
+        document.querySelectorAll('.role-option').forEach(el => {
+            el.addEventListener('click', (e) => {
+                document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+                e.target.classList.add('selected');
+                document.getElementById('role').value = e.target.dataset.role;
+            });
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showToast('Registration successful! Please login.');
+                    setTimeout(() => window.location.href = 'login.html', 1500);
+                } else {
+                    showToast(data.message || 'Registration failed', 'error');
+                }
+            } catch (err) {
+                showToast('Failed to connect to server', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

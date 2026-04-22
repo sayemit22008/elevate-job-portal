@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post a Job - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <a href="hr-dashboard.html">Overview</a>
+                <a href="manage-jobs.html">Manage Jobs</a>
+                <a href="post-job.html" class="active">Post a Job</a>
+            </aside>
+            
+            <div class="dashboard-content fade-in">
+                <div class="glass-card">
+                    <h2 style="margin-bottom: 1.5rem;">Create a New Job Posting</h2>
+                    
+                    <form id="post-job-form">
+                        <div class="form-group">
+                            <label>Job Title</label>
+                            <input type="text" id="title" class="form-control" required placeholder="Senior Frontend Developer">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="category" class="form-control" required style="background: rgba(255, 255, 255, 0.8);">
+                                <option value="Engineering">Engineering</option>
+                                <option value="Design">Design</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Finance">Finance</option>
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" id="location" class="form-control" placeholder="New York, NY or Remote">
+                            </div>
+                            <div class="form-group">
+                                <label>Salary / Compensation</label>
+                                <input type="text" id="salary" class="form-control" placeholder="120,000">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Application Deadline</label>
+                            <input type="date" id="deadline" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Job Description</label>
+                            <textarea id="description" class="form-control" rows="6" required placeholder="Describe the role..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post Job Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = getUser();
+            if (!user || user.role !== 'hr') {
+                window.location.href = 'login.html';
+            }
+        });
+
+        document.getElementById('post-job-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                title: document.getElementById('title').value,
+                category: document.getElementById('category').value,
+                location: document.getElementById('location').value,
+                salary: document.getElementById('salary').value,
+                deadline: document.getElementById('deadline').value,
+                description: document.getElementById('description').value
+            };
+
+            try {
+                await apiFetch('/jobs', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                showToast('Job posted successfully!');
+                setTimeout(() => window.location.href = 'manage-jobs.html', 1500);
+            } catch (err) {}
+        });
+    </script>
+</body>
+</html>

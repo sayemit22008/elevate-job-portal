@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elevate - Job Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="jobs.html">Find a Job</a></li>
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+            <div id="auth-nav" class="auth-nav">
+                <!-- Injected via JS -->
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero fade-in">
+            <h1>Discover Your Dream Career</h1>
+            <p>Connect with top companies, showcase your skills, and land the job you deserve.</p>
+            <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+                <a href="jobs.html" class="btn btn-primary btn-lg">Browse Jobs</a>
+                <a href="register.html" class="btn btn-outline btn-lg">Upload Resume</a>
+            </div>
+        </section>
+
+        <section class="glass-card fade-in" style="margin-top: 4rem;">
+            <h2 style="text-align: center; margin-bottom: 2rem;">Trending Opportunities</h2>
+            <div class="job-grid" id="latest-jobs">
+                <!-- Dynamically loaded -->
+                <div style="text-align: center; grid-column: 1 / -1;">Loading jobs...</div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Elevate Job Portal. All Rights Reserved.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const jobs = await apiFetch('/jobs');
+                const container = document.getElementById('latest-jobs');
+                container.innerHTML = '';
+                
+                if (jobs.length === 0) {
+                    container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center;">No jobs available at the moment.</p>';
+                    return;
+                }
+
+                // Show top 3 or 6 latest
+                jobs.slice(0, 3).forEach(job => {
+                    const card = document.createElement('div');
+                    card.className = 'job-card';
+                    card.innerHTML = `
+                        <h3 class="job-title">${job.title}</h3>
+                        <p class="job-company">${job.company_name}</p>
+                        <div class="job-tags">
+                            <span class="tag">📍 ${job.location || 'Remote'}</span>
+                            <span class="tag">💼 ${job.category || 'General'}</span>
+                            <span class="tag">💰 ${job.salary ? '$' + job.salary : 'Confidential'}</span>
+                        </div>
+                        <a href="job-details.html?id=${job.id}" class="btn btn-primary" style="margin-top: auto; text-align: center;">View Details</a>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                document.getElementById('latest-jobs').innerHTML = '<p style="color: red; text-align: center;">Failed to load jobs.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

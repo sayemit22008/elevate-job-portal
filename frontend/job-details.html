@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Details - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .details-header {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .action-bar {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .meta-info {
+            display: flex;
+            gap: 2rem;
+            color: var(--gray);
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <ul>
+                <li><a href="jobs.html" style="color: var(--primary);">Find a Job</a></li>
+            </ul>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="glass-card fade-in" id="job-content" style="display: none;">
+            <div class="details-header">
+                <h1 id="title" style="margin-bottom: 0.5rem;"></h1>
+                <h3 id="company" style="color: var(--primary); font-weight: 600;"></h3>
+                <div class="meta-info">
+                    <span id="location">📍 </span>
+                    <span id="salary">💰 </span>
+                    <span id="category">💼 </span>
+                </div>
+                
+                <div class="action-bar" id="action-wrapper">
+                    <button class="btn btn-primary" id="apply-btn">Apply Now</button>
+                    <button class="btn btn-outline" id="save-btn">Save Job</button>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="margin-bottom: 1rem;">Job Description</h3>
+                <div id="description" style="line-height: 1.7; color: #4b5563;"></div>
+            </div>
+        </div>
+        <div id="loading" style="text-align: center; padding: 3rem;">Loading job details...</div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const jobId = urlParams.get('id');
+            const user = getUser();
+            
+            if (!jobId) {
+                document.getElementById('loading').innerText = 'Job ID not found.';
+                return;
+            }
+
+            if (user && user.role === 'hr') {
+                document.getElementById('action-wrapper').style.display = 'none';
+            }
+
+            try {
+                const job = await apiFetch(`/jobs/${jobId}`);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('job-content').style.display = 'block';
+
+                document.getElementById('title').innerText = job.title;
+                document.getElementById('company').innerText = job.company_name;
+                document.getElementById('location').innerText += job.location || 'Remote';
+                document.getElementById('salary').innerText += job.salary ? '$' + job.salary : 'Confidential';
+                document.getElementById('category').innerText += job.category || 'General';
+                
+                // Keep line breaks for text
+                document.getElementById('description').innerHTML = job.description.replace(/\n/g, '<br>');
+
+                // Actions
+                document.getElementById('apply-btn').addEventListener('click', async () => {
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    try {
+                        await apiFetch(`/applications/apply/${jobId}`, { method: 'POST' });
+                        showToast('Application submitted successfully!');
+                        document.getElementById('apply-btn').innerText = 'Applied ✓';
+                        document.getElementById('apply-btn').disabled = true;
+                    } catch (e) {
+                        // Toast already shown in apiFetch wrapper
+                    }
+                });
+
+                document.getElementById('save-btn').addEventListener('click', async () => {
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    try {
+                        await apiFetch(`/users/save-job/${jobId}`, { method: 'POST' });
+                        showToast('Job saved to your dashboard!');
+                        document.getElementById('save-btn').innerText = 'Saved ✓';
+                    } catch (e) {}
+                });
+
+            } catch (err) {
+                document.getElementById('loading').innerText = 'Error loading job details.';
+            }
+        });
+    </script>
+</body>
+</html>

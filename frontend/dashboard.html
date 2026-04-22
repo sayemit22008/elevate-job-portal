@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .app-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .app-item:last-child {
+            border-bottom: none;
+        }
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-Pending { background: #fef3c7; color: #d97706; }
+        .status-Accepted { background: #d1fae5; color: #059669; }
+        .status-Rejected { background: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <a href="dashboard.html" class="active">Overview</a>
+                <a href="profile.html">My Profile</a>
+                <a href="jobs.html">Browse Jobs</a>
+            </aside>
+            
+            <div class="dashboard-content fade-in">
+                <h2 style="margin-bottom: 1.5rem;">Welcome back, <span id="user-name"></span></h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-number" id="applied-count">0</div>
+                        <div>Jobs Applied</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #10B981, #047857);">
+                        <div class="stat-number" id="saved-count">0</div>
+                        <div>Saved Jobs</div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3 style="margin-bottom: 1rem;">Recent Applications</h3>
+                    <div id="applications-list">
+                        <p style="color: var(--gray);">Loading applications...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = getUser();
+            if (!user || user.role !== 'seeker') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('user-name').innerText = user.name;
+
+            try {
+                const stats = await apiFetch('/users/dashboard-stats');
+                document.getElementById('applied-count').innerText = stats.appliedCount;
+                document.getElementById('saved-count').innerText = stats.savedCount;
+
+                const applications = await apiFetch('/applications/my-applications');
+                const list = document.getElementById('applications-list');
+                list.innerHTML = '';
+
+                if (applications.length === 0) {
+                    list.innerHTML = '<p>You haven\'t applied to any jobs yet.</p>';
+                } else {
+                    applications.forEach(app => {
+                        const date = new Date(app.applied_at).toLocaleDateString();
+                        list.innerHTML += `
+                            <div class="app-item">
+                                <div>
+                                    <h4 style="color: var(--primary); margin-bottom: 0.2rem;">${app.title}</h4>
+                                    <small style="color: var(--gray);">${app.company_name} • Applied on ${date}</small>
+                                </div>
+                                <div class="status-badge status-${app.status}">${app.status}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load dashboard data');
+            }
+        });
+    </script>
+</body>
+</html>

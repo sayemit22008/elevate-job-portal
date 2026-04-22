@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Elevate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="logo">Elevate.</a>
+            <div id="auth-nav" class="auth-nav"></div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <a href="dashboard.html">Overview</a>
+                <a href="profile.html" class="active">My Profile</a>
+                <a href="jobs.html">Browse Jobs</a>
+            </aside>
+            
+            <div class="dashboard-content fade-in">
+                <div class="glass-card">
+                    <h2 style="margin-bottom: 1.5rem;">Update Profile</h2>
+                    
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label>Skills (comma separated)</label>
+                            <input type="text" id="skills" class="form-control" placeholder="JavaScript, Node.js, React">
+                        </div>
+                        <div class="form-group">
+                            <label>Education</label>
+                            <textarea id="education" class="form-control" rows="3" placeholder="BSc Computer Science - University X"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Experience</label>
+                            <textarea id="experience" class="form-control" rows="3" placeholder="Frontend Developer at Y Company (2 years)"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Profile Details</button>
+                    </form>
+
+                    <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+                    <h3 style="margin-bottom: 1rem;">Upload Resume (PDF/DOC)</h3>
+                    <form id="resume-form" style="display: flex; gap: 1rem; align-items: center;">
+                        <input type="file" id="resume" accept=".pdf,.doc,.docx" required>
+                        <button type="submit" class="btn btn-outline">Upload</button>
+                    </form>
+                    <div id="resume-link" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = getUser();
+            if (!user || user.role !== 'seeker') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const profile = await apiFetch('/users/profile');
+                if (profile) {
+                    document.getElementById('skills').value = profile.skills || '';
+                    document.getElementById('education').value = profile.education || '';
+                    document.getElementById('experience').value = profile.experience || '';
+                    
+                    if (profile.resume_url) {
+                        document.getElementById('resume-link').innerHTML = `<a href="http://localhost:5000${profile.resume_url}" target="_blank" style="color: var(--primary); font-weight: 500;">View Current Resume</a>`;
+                    }
+                }
+            } catch (err) {}
+
+            document.getElementById('profile-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const skills = document.getElementById('skills').value;
+                const education = document.getElementById('education').value;
+                const experience = document.getElementById('experience').value;
+
+                try {
+                    await apiFetch('/users/profile', {
+                        method: 'PUT',
+                        body: JSON.stringify({ skills, education, experience })
+                    });
+                    showToast('Profile updated successfully!');
+                } catch (err) {}
+            });
+
+            document.getElementById('resume-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const fileInput = document.getElementById('resume');
+                if (!fileInput.files[0]) return;
+
+                const formData = new FormData();
+                formData.append('resume', fileInput.files[0]);
+
+                try {
+                    const res = await apiFetch('/users/resume', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    showToast('Resume uploaded!');
+                    document.getElementById('resume-link').innerHTML = `<a href="http://localhost:5000${res.resumeUrl}" target="_blank" style="color: var(--primary); font-weight: 500;">View Current Resume</a>`;
+                } catch (err) {}
+            });
+        });
+    </script>
+</body>
+</html>
