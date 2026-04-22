@@ -1,6 +1,6 @@
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:5000/api' 
-    : 'https://elevate-backend.onrender.com/api'; // We will update this later with your actual Render URL
+    : 'https://elevate-backend-mnp3.onrender.com/api';
 
 // Toast Notification
 function showToast(message, type = 'success') {
